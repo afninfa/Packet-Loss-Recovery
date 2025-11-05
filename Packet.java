@@ -19,7 +19,7 @@ public record Packet(
 
     public static Packet packetFromString(String packetSerial) {
         // e.g. "DATA|3|hello world!"
-        String[] parts = packetSerial.split("|");
+        String[] parts = packetSerial.split("\\|");
         return new Packet(
             PacketType.valueOf(parts[0]),
             Integer.valueOf(parts[1]),
