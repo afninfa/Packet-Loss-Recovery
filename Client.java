@@ -4,6 +4,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class Client {
 
@@ -16,6 +17,7 @@ public class Client {
         Map<Integer, String> messagePieces,
         InetAddress server
     ) {
+        Random rand = new Random();
         return () -> {
             byte[] buffer = new byte[BUFFER_SIZE];
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
@@ -45,18 +47,23 @@ public class Client {
                         break mainLoop;
                     }
                     case DATA -> {
-                        // Add to hashmap
-                        messagePieces.put(tcpPacket.sequenceNumber(), tcpPacket.messageChunk());
-                        // Send ACK
-                        System.out.println("[INFO] Sending ACK for " + tcpPacket.sequenceNumber());
-                        try {
-                            Client.sendAckPacket(
-                                tcpPacket.sequenceNumber(),
-                                server,
-                                socket
-                            );
-                        } catch (Exception e) {
-                            System.err.println("Could not send ACK packet " + e);
+                        // Simulate packet loss
+                        if (rand.nextInt(10) < 5) {
+                            // Add to hashmap
+                            messagePieces.put(tcpPacket.sequenceNumber(), tcpPacket.messageChunk());
+                            // Send ACK
+                            System.out.println("[INFO] Sending ACK for " + tcpPacket.sequenceNumber());
+                            try {
+                                Client.sendAckPacket(
+                                    tcpPacket.sequenceNumber(),
+                                    server,
+                                    socket
+                                );
+                            } catch (Exception e) {
+                                System.err.println("Could not send ACK packet " + e);
+                            }
+                        } else {
+                            System.out.println("[INFO] Packet intentionally dropped to simulate packet loss.");
                         }
                     }
                     case ACK, INIT -> {
@@ -98,14 +105,16 @@ public class Client {
         }
         // Make socket
         try {
-            socket = new DatagramSocket(SERVER_PORT);
+            // Don't specify the port, let the OS choose. This way, we can test with multiple
+            // concurrent clients.
+            socket = new DatagramSocket();
         } catch (Exception e) {
             System.err.println("Failed to create socket: " + e.getMessage());
             return;
         }
         // Set up receiver first
         Thread receiver = Thread.startVirtualThread(
-            makeReceiverRoutine(socket, messagePieces, server)
+            Client.makeReceiverRoutine(socket, messagePieces, server)
         );
         // Send an INIT packet to the server
         Packet initPacket = new Packet(PacketType.INIT, -1, "");
