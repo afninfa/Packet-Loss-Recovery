@@ -10,10 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Server {
 
-    private static final int BUFFER_SIZE = 2048;
-    private static final int SERVER_PORT = 8080;
-    private static final String LOCALHOST = "localhost";
-
     private record ClientData(
         Set<Integer> ackedSeqNumbers,
         InetAddress clientHost,
@@ -42,12 +38,12 @@ public class Server {
 
     private static Runnable makeReceiverRoutine() throws SocketException {
         // Init this socket outside the routine because it can throw exceptions
-        DatagramSocket socket = new DatagramSocket(SERVER_PORT);
+        DatagramSocket socket = new DatagramSocket(Registry.SERVER_PORT);
         Runnable routine = () -> {
             // This map doesn't need to be concurrent, we only have one listener thread
             Map<String, ClientData> clientIdToData = new HashMap<>();
             // Listen for packets
-            byte[] buffer = new byte[BUFFER_SIZE];
+            byte[] buffer = new byte[Registry.BUFFER_SIZE];
             while (true) {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 try {

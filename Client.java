@@ -8,10 +8,6 @@ import java.util.Random;
 
 public class Client {
 
-    private static final int BUFFER_SIZE = 2048;
-    private static final int SERVER_PORT = 8080;
-    private static final String LOCALHOST = "localhost";
-
     public static Runnable makeReceiverRoutine(
         DatagramSocket socket,
         Map<Integer, String> messagePieces,
@@ -19,7 +15,7 @@ public class Client {
     ) {
         Random rand = new Random();
         Runnable routine = () -> {
-            byte[] buffer = new byte[BUFFER_SIZE];
+            byte[] buffer = new byte[Registry.BUFFER_SIZE];
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
             // Exits when we receive a "FIN" packet
             mainLoop: while (true) {
@@ -88,7 +84,7 @@ public class Client {
             ackPacketSerial,
             ackPacketSerial.length,
             server,
-            SERVER_PORT
+            Registry.SERVER_PORT
         );
         socket.send(ackPacketSend);
     }
@@ -99,7 +95,7 @@ public class Client {
         // Get server address
         InetAddress server;
         try {
-            server = InetAddress.getByName(LOCALHOST);
+            server = InetAddress.getByName(Registry.LOCALHOST);
         } catch (Exception e) {
             System.err.println("Could not resolve localhost " + e);
             return;
