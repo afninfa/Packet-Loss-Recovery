@@ -26,7 +26,6 @@ public class Client {
                     socket.receive(packet);
                 } catch (Exception e) {
                     System.err.println("Failed to receive data: " + e.getMessage());
-                    socket.close();
                     break mainLoop;
                 }
                 // Check for truncation
@@ -34,7 +33,9 @@ public class Client {
                     System.out.println("[WARN] Entire buffer was used, packet may be truncated!");
                 }
                 // Parse the packet string e.g. "DATA|3|hello world!"
-                Packet tcpPacket = Packet.packetFromString(new String(packet.getData()));
+                Packet tcpPacket = Packet.packetFromString(
+                    new String(packet.getData(), 0, packet.getLength())
+                );
                 switch (tcpPacket.type()) {
                     case FIN -> {
                         // If it's a FIN packet, exit. If the FIN packet is lost, this will be a
@@ -127,9 +128,6 @@ public class Client {
             System.err.println("Main thread failed on the .join() " + e.getMessage());
             return;
         }
-        // messagePieces.keySet().stream().sorted().forEach(key -> {
-        //     System.out.print(messagePieces.get(key));
-        // });
         String fullMessage = messagePieces.entrySet().stream()
             .sorted(Map.Entry.comparingByKey())
             .map(Map.Entry::getValue)
