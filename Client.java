@@ -18,7 +18,7 @@ public class Client {
         InetAddress server
     ) {
         Random rand = new Random();
-        return () -> {
+        Runnable routine = () -> {
             byte[] buffer = new byte[BUFFER_SIZE];
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
             // Exits when we receive a "FIN" packet
@@ -74,6 +74,7 @@ public class Client {
                 }
             }
         };
+        return routine;
     }
 
     private static void sendAckPacket(
