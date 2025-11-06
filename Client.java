@@ -105,11 +105,10 @@ public class Client {
             System.err.println("Main thread failed on the .join() " + e.getMessage());
             return;
         }
-        System.out.println("Re-ordered message:");
         String fullMessage = messagePieces.entrySet().stream()
             .sorted(Map.Entry.comparingByKey())
             .map(Map.Entry::getValue)
-            .reduce("", (s1, s2) -> s1 + "\n> " + s2); // Visualise packet boundaries
+            .reduce("Re-ordered message:", (s1, s2) -> s1 + "\n> " + s2);
         System.out.println(fullMessage);
     }
 }
