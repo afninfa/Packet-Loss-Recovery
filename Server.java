@@ -20,6 +20,10 @@ public class Server {
         public String toString() {
             return this.uniqueId;
         }
+
+        public void acknowledge(Integer sequenceNumber) {
+            this.ackedSeqNumbers.add(sequenceNumber);
+        }
     }
 
     private static Runnable makeSenderRoutine(ClientData clientData) {
@@ -73,9 +77,11 @@ public class Server {
                         Thread.startVirtualThread(makeSenderRoutine(clientData));
                     }
                     case PacketType.ACK -> {
-                        // TODO: Add this sequence number to the client's set
-                        // DON'T need to do anything else, like send a FIN packet. The thread
-                        // dedicated to the client will handle this.
+                        if (!clientIdToData.containsKey(clientUniqueId)) {
+                            System.err.println("Received an ACK from an unknown client " + clientUniqueId);
+                            return;
+                        }
+                        clientIdToData.get(clientUniqueId).acknowledge(tcpPacket.sequenceNumber());
                     }
                     case PacketType.DATA, PacketType.FIN -> {
                         System.err.println("[ERROR] Received " + tcpPacket.type().name() +
