@@ -3,9 +3,14 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 
 public class Server {
@@ -26,15 +31,34 @@ public class Server {
         }
     }
 
-    private static Runnable makeSenderRoutine(ClientData clientData) {
+    private static Runnable makeSenderRoutine(
+        ClientData clientData,
+        List<String> messagePieces
+    ) {
         Runnable routine = () -> {
+            int numberOfPackets = messagePieces.size() - 1;
             System.out.println("[INFO] Sender spawned for " + clientData.uniqueId());
             while (true) {
-                // TODO: Go through the ackedSeqNumbers and send anything which they have not
-                // yet ACKed. If all are ACKed, send the FIN packet and then exit.
+                // Look through every sequence number
+                List<Integer> seqNumbersSent = IntStream.range(0, numberOfPackets)
+                    .boxed()
+                    .filter(currSeqNumber -> {
+                        // If it's been ACKed, return false
+                        if (clientData.ackedSeqNumbers().contains(currSeqNumber)) {
+                            return false;
+                        }
+                        // If no ACK, send the packet and return true
+                        // TODO
+                        return true;
+                    })
+                    .toList();
 
-                // TODO: Pause for 5 seconds (non-blocking because it's a virtual thread) and wait
+                // If no packets were sent, send the FIN packet and then exit
+                // TODO
+
+                // Pause for 5 seconds (non-blocking because it's a virtual thread) and wait
                 // while the receiver thread marks off more ACKs in the set
+                // TODO
             }
         };
         return routine;
