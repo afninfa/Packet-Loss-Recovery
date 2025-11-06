@@ -19,13 +19,13 @@ The message is sent using the following general structure
 
 ![architecture](architecture.jpg)
 
-The receiver thread on the server will
-- spawn a sender thread for a new client
-- write sequence numbers to the thread-safe sets for each ACK it sees
+The server has **one receiver thread** which does the following
+- spawns a new sender thread (see below) and a thread-safe `Set<Integer>` for each new connecting client
+- when an existing client sends an ACK for a particular sequence number, add the number to the thread-safe `Set<Integer>` for this client
 
-The per-client sender thread will
+Each **sender thread** does the following
 - send all the chunks which the client has not yet ACKed
-- sleep for 5 seconds before repeating
+- sleep for 5 seconds and repeat
 
 Note that because we use **virtual threads,** the sleeping thread won't schedule busy waiting
 instructions like it would in an OS thread.
