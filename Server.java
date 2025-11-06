@@ -36,7 +36,7 @@ public class Server {
     ) throws SocketException {
         DatagramSocket socket = new DatagramSocket(); // Not a receiver, random port
         Runnable routine = () -> {
-            System.out.println("Sender spawned for " + clientData.uniqueId());
+            System.out.println("|RECEIVER| Sender spawned for " + clientData.uniqueId());
             while (true) {
                 // Look through every sequence number
                 List<Integer> seqNumbersSent = IntStream.range(0, messagePieces.size())
@@ -70,10 +70,10 @@ public class Server {
                         clientData.clientPort,
                         socket
                     );
-                    System.out.println("|" + clientData.uniqueId + "| Sent FIN packet");
+                    System.out.println("|SENDER " + clientData.uniqueId + "| Sent FIN packet");
                     return;
                 } else {
-                    System.out.println("|" + clientData.uniqueId + "| Sent sequence numbers " + seqNumbersSent);
+                    System.out.println("|SENDER " + clientData.uniqueId + "| Sent sequence numbers " + seqNumbersSent);
                 }
 
                 // Pause for 5 seconds (non-blocking because it's a virtual thread)
@@ -125,7 +125,6 @@ public class Server {
                             clientUniqueId
                         );
                         clientIdToData.put(clientUniqueId, clientData);
-                        System.out.println("New client registered with ID " + clientUniqueId);
                         // Spawn a virtual thread to handle sends to this client
                         try {
                             Thread.startVirtualThread(makeSenderRoutine(clientData, messagePieces));
@@ -143,6 +142,11 @@ public class Server {
                             return;
                         }
                         clientIdToData.get(clientUniqueId).acknowledge(tcpPacket.sequenceNumber());
+                        System.out.println("|RECEIVER| Client "
+                            + clientUniqueId
+                            + " ACKs "
+                            + tcpPacket.sequenceNumber()
+                        );
                     }
                     case PacketType.DATA, PacketType.FIN -> {
                         System.err.println("[ERROR] Received " + tcpPacket.type().name() +
