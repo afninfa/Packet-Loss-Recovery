@@ -24,7 +24,7 @@ The server has **one receiver thread** which receives ACKs from the clients. It 
 Note that because we use **virtual threads,** the sleeping thread won't schedule busy waiting
 instructions like it would in an OS thread.
 
-Here is an example of the server logs with two concurrent clients.
+This is an example of server logs with two sender threads and one receiver thread.
 
 ```
 Packet-Loss-Recovery $ make run-server
