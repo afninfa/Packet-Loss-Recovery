@@ -36,11 +36,10 @@ public class Server {
     ) throws SocketException {
         DatagramSocket socket = new DatagramSocket(); // Not a receiver, random port
         Runnable routine = () -> {
-            int numberOfPackets = messagePieces.size() - 1;
             System.out.println("Sender spawned for " + clientData.uniqueId());
             while (true) {
                 // Look through every sequence number
-                List<Integer> seqNumbersSent = IntStream.range(0, numberOfPackets)
+                List<Integer> seqNumbersSent = IntStream.range(0, messagePieces.size())
                     .boxed()
                     .filter(currSeqNumber -> {
                         // If it's been ACKed, return false
@@ -81,7 +80,7 @@ public class Server {
                 // During this time, if the receiver thread gets ACKs, it will mark them
                 // in clientData.ackedSeqNumbers
                 try {
-                    Thread.sleep(Duration.ofSeconds(5));
+                    Thread.sleep(Duration.ofSeconds(1));
                 } catch (Exception e) {
                     System.err.println("Sender for client "
                         + clientData.uniqueId
