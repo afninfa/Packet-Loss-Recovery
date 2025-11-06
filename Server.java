@@ -112,7 +112,15 @@ public class Server {
                         clientIdToData.put(clientUniqueId, clientData);
                         System.out.println("[INFO] New client registered with ID " + clientUniqueId);
                         // Spawn a virtual thread to handle sends to this client
-                        Thread.startVirtualThread(makeSenderRoutine(clientData, messagePieces));
+                        try {
+                            Thread.startVirtualThread(makeSenderRoutine(clientData, messagePieces));
+                        } catch (Exception e) {
+                            System.err.println("Failed to start thread for client "
+                                + clientUniqueId
+                                + " error "
+                                + e.getMessage()
+                            );
+                        }
                     }
                     case PacketType.ACK -> {
                         if (!clientIdToData.containsKey(clientUniqueId)) {
