@@ -3,10 +3,6 @@
 
 Brushing up on my knowledge of TCP by implementing sequence numbers and ACK responses over UDP.
 
-Implementation is half-duplex and one-way (client downloads from server only) without the three-way handshake in the beginning.
-
-## What it does
-
 Begin by splitting data into chunks. Each chunk gets an index called a sequence number.
 
 ```
