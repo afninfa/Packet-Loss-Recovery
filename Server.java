@@ -51,7 +51,17 @@ public class Server {
                             return false;
                         }
                         // If no ACK, send the packet and return true
-                        // TODO
+                        Packet dataPacket = new Packet(
+                            PacketType.DATA,
+                            currSeqNumber,
+                            messagePieces.get(currSeqNumber)
+                        );
+                        Common.sendPacket(
+                            dataPacket,
+                            clientData.clientHost,
+                            clientData.clientPort,
+                            socket
+                        );
                         return true;
                     })
                     .toList();
