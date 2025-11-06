@@ -20,10 +20,11 @@ public record Packet(
     public static Packet packetFromString(String packetSerial) {
         // e.g. "DATA|3|hello world!"
         String[] parts = packetSerial.split("\\|");
-        return new Packet(
+        var result = new Packet(
             PacketType.valueOf(parts[0]),
             Integer.valueOf(parts[1]),
             new String(Base64.getDecoder().decode(parts[2]))
         );
+        return result;
     }
 }

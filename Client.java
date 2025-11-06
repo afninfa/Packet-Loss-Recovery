@@ -27,7 +27,7 @@ public class Client {
                 }
                 // Check for truncation
                 if (packet.getLength() == buffer.length) {
-                    System.out.println("[WARN] Entire buffer was used, packet may be truncated!");
+                    System.out.println("WARNING: Entire buffer was used, packet may be truncated!");
                 }
                 // Parse the packet string e.g. "DATA|3|hello world!"
                 Packet tcpPacket = Packet.packetFromString(
@@ -38,7 +38,7 @@ public class Client {
                         // If it's a FIN packet, exit. If the FIN packet is lost, this will be a
                         // bug, but protecting against FIN packet loss is out of scope for this
                         // project.
-                        System.out.println("[INFO] Received FIN packet");
+                        System.out.println("Received FIN packet");
                         break mainLoop;
                     }
                     case DATA -> {
@@ -47,15 +47,17 @@ public class Client {
                             // Add to hashmap
                             messagePieces.put(tcpPacket.sequenceNumber(), tcpPacket.messageChunk());
                             // Send ACK
-                            System.out.println("[INFO] Sending ACK for " + tcpPacket.sequenceNumber());
+                            System.out.println("Sending ACK for " + tcpPacket.sequenceNumber());
                             try {
-                                Packet ackPacket = new Packet(PacketType.ACK, tcpPacket.sequenceNumber(), "");
+                                Packet ackPacket = new Packet(
+                                    PacketType.ACK,
+                                    tcpPacket.sequenceNumber(),
+                                    Registry.PAYLOAD_EMPTY
+                                );
                                 Common.sendPacket(ackPacket, server, Registry.SERVER_PORT, socket);
                             } catch (Exception e) {
                                 System.err.println("Could not send ACK packet " + e);
                             }
-                        } else {
-                            System.out.println("[INFO] Packet intentionally dropped to simulate packet loss.");
                         }
                     }
                     case ACK, INIT -> {
@@ -94,7 +96,7 @@ public class Client {
             Client.makeReceiverRoutine(socket, messagePieces, server)
         );
         // Send an INIT packet to the server
-        Packet initPacket = new Packet(PacketType.INIT, -1, "");
+        Packet initPacket = new Packet(PacketType.INIT, -1, Registry.PAYLOAD_EMPTY);
         Common.sendPacket(initPacket, server, Registry.SERVER_PORT, socket);
         // When the receiver is done, reconstruct the message
         try {
@@ -106,7 +108,7 @@ public class Client {
         String fullMessage = messagePieces.entrySet().stream()
             .sorted(Map.Entry.comparingByKey())
             .map(Map.Entry::getValue)
-            .reduce("", (s1, s2) -> s1 + " | " + s2); // Visualise packet boundaries
+            .reduce("", (s1, s2) -> s1 + s2); // Visualise packet boundaries
         System.out.println(fullMessage);
     }
 }

@@ -37,7 +37,7 @@ public class Server {
         DatagramSocket socket = new DatagramSocket(); // Not a receiver, random port
         Runnable routine = () -> {
             int numberOfPackets = messagePieces.size() - 1;
-            System.out.println("[INFO] Sender spawned for " + clientData.uniqueId());
+            System.out.println("Sender spawned for " + clientData.uniqueId());
             while (true) {
                 // Look through every sequence number
                 List<Integer> seqNumbersSent = IntStream.range(0, numberOfPackets)
@@ -62,18 +62,19 @@ public class Server {
                         return true;
                     })
                     .toList();
-                System.out.println("Sent sequence numbers " + seqNumbersSent);
-
                 // If no packets were sent, send the FIN packet and then exit
                 if (seqNumbersSent.size() == 0) {
-                    Packet finPacket = new Packet(PacketType.FIN, -1, "");
+                    Packet finPacket = new Packet(PacketType.FIN, -1, Registry.PAYLOAD_EMPTY);
                     Common.sendPacket(
                         finPacket,
                         clientData.clientHost,
                         clientData.clientPort,
                         socket
                     );
+                    System.out.println("|" + clientData.uniqueId + "| Sent FIN packet");
                     return;
+                } else {
+                    System.out.println("|" + clientData.uniqueId + "| Sent sequence numbers " + seqNumbersSent);
                 }
 
                 // Pause for 5 seconds (non-blocking because it's a virtual thread)
@@ -125,7 +126,7 @@ public class Server {
                             clientUniqueId
                         );
                         clientIdToData.put(clientUniqueId, clientData);
-                        System.out.println("[INFO] New client registered with ID " + clientUniqueId);
+                        System.out.println("New client registered with ID " + clientUniqueId);
                         // Spawn a virtual thread to handle sends to this client
                         try {
                             Thread.startVirtualThread(makeSenderRoutine(clientData, messagePieces));
