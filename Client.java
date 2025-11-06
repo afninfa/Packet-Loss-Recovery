@@ -50,11 +50,8 @@ public class Client {
                             // Send ACK
                             System.out.println("[INFO] Sending ACK for " + tcpPacket.sequenceNumber());
                             try {
-                                Client.sendAckPacket(
-                                    tcpPacket.sequenceNumber(),
-                                    server,
-                                    socket
-                                );
+                                Packet ackPacket = new Packet(PacketType.ACK, tcpPacket.sequenceNumber(), "");
+                                Common.sendPacket(ackPacket, server, Registry.SERVER_PORT, socket);
                             } catch (Exception e) {
                                 System.err.println("Could not send ACK packet " + e);
                             }
@@ -71,22 +68,6 @@ public class Client {
             }
         };
         return routine;
-    }
-
-    private static void sendAckPacket(
-        Integer sequenceNumber,
-        InetAddress server,
-        DatagramSocket socket
-    ) throws IOException {
-        Packet ackPacket = new Packet(PacketType.ACK, sequenceNumber, "");
-        byte[] ackPacketSerial = ackPacket.toString().getBytes();
-        DatagramPacket ackPacketSend = new DatagramPacket(
-            ackPacketSerial,
-            ackPacketSerial.length,
-            server,
-            Registry.SERVER_PORT
-        );
-        socket.send(ackPacketSend);
     }
 
     public static void main(String[] args) {
@@ -115,18 +96,7 @@ public class Client {
         );
         // Send an INIT packet to the server
         Packet initPacket = new Packet(PacketType.INIT, -1, "");
-        byte[] initPacketSerial = initPacket.toString().getBytes();
-        DatagramPacket initPacketSend = new DatagramPacket(
-            initPacketSerial,
-            initPacketSerial.length,
-            server,
-            8080
-        );
-        try {
-            socket.send(initPacketSend);
-        } catch (Exception e) {
-            System.err.println("Failed to send INIT packet " + e.getMessage());
-        }
+        Common.sendPacket(initPacket, server, Registry.SERVER_PORT, socket);
         // When the receiver is done, reconstruct the message
         try {
             receiver.join();

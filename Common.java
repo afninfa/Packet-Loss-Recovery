@@ -1,3 +1,7 @@
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+
 public class Common {
     static String phrase() {
         return """
@@ -10,5 +14,24 @@ public class Common {
             administration, and file transfer rely on TCP, which is part of the transport layer of
             the TCP/IP suite. SSL/TLS often run on top of TCP.
             """;
+    }
+
+    static void sendPacket(Packet logicalPacket, InetAddress server, int port, DatagramSocket socket) {
+        byte[] logicalPacketSerial = logicalPacket.toString().getBytes();
+        DatagramPacket physicalPacket = new DatagramPacket(
+            logicalPacketSerial,
+            logicalPacketSerial.length,
+            server,
+            port
+        );
+        try {
+            socket.send(physicalPacket);
+        } catch (Exception e) {
+            System.err.println("Failed to send packet "
+                + logicalPacket.toString()
+                + " error "
+                + e.getMessage()
+            );
+        }
     }
 }

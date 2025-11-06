@@ -1,7 +1,9 @@
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +36,8 @@ public class Server {
     private static Runnable makeSenderRoutine(
         ClientData clientData,
         List<String> messagePieces
-    ) {
+    ) throws SocketException {
+        DatagramSocket socket = new DatagramSocket(); // Not a receiver, random port
         Runnable routine = () -> {
             int numberOfPackets = messagePieces.size() - 1;
             System.out.println("[INFO] Sender spawned for " + clientData.uniqueId());
@@ -52,6 +55,7 @@ public class Server {
                         return true;
                     })
                     .toList();
+                System.out.println("Sent sequence numbers " + seqNumbersSent);
 
                 // If no packets were sent, send the FIN packet and then exit
                 // TODO
@@ -64,7 +68,7 @@ public class Server {
         return routine;
     }
 
-    private static Runnable makeReceiverRoutine() throws SocketException {
+    private static Runnable makeReceiverRoutine(List<String> messagePieces) throws SocketException {
         // Init this socket outside the routine because it can throw exceptions
         DatagramSocket socket = new DatagramSocket(Registry.SERVER_PORT);
         Runnable routine = () -> {
@@ -98,7 +102,7 @@ public class Server {
                         clientIdToData.put(clientUniqueId, clientData);
                         System.out.println("[INFO] New client registered with ID " + clientUniqueId);
                         // Spawn a virtual thread to handle sends to this client
-                        Thread.startVirtualThread(makeSenderRoutine(clientData));
+                        Thread.startVirtualThread(makeSenderRoutine(clientData, messagePieces));
                     }
                     case PacketType.ACK -> {
                         if (!clientIdToData.containsKey(clientUniqueId)) {
@@ -119,9 +123,14 @@ public class Server {
     }
 
     public static void main(String[] args) {
+        List<String> messagePieces = new ArrayList<>();
+        for (int i = 0; i < Common.phrase().length(); i += Registry.TCP_PAYLOAD_SIZE) {
+            int end = Math.min(i + Registry.TCP_PAYLOAD_SIZE, Common.phrase().length());
+            messagePieces.add(Common.phrase().substring(i, end));
+        }
         Runnable receiverRoutine;
         try {
-            receiverRoutine = Server.makeReceiverRoutine();
+            receiverRoutine = Server.makeReceiverRoutine(messagePieces);
         } catch (Exception e) {
             System.err.println("Failed to setup socket receiver " + e.getMessage());
             return;
