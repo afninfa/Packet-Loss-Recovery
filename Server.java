@@ -1,18 +1,15 @@
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.Socket;
 import java.net.SocketException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 
 public class Server {
@@ -68,11 +65,29 @@ public class Server {
                 System.out.println("Sent sequence numbers " + seqNumbersSent);
 
                 // If no packets were sent, send the FIN packet and then exit
-                // TODO
+                if (seqNumbersSent.size() == 0) {
+                    Packet finPacket = new Packet(PacketType.FIN, -1, "");
+                    Common.sendPacket(
+                        finPacket,
+                        clientData.clientHost,
+                        clientData.clientPort,
+                        socket
+                    );
+                    return;
+                }
 
-                // Pause for 5 seconds (non-blocking because it's a virtual thread) and wait
-                // while the receiver thread marks off more ACKs in the set
-                // TODO
+                // Pause for 5 seconds (non-blocking because it's a virtual thread)
+                // During this time, if the receiver thread gets ACKs, it will mark them
+                // in clientData.ackedSeqNumbers
+                try {
+                    Thread.sleep(Duration.ofSeconds(5));
+                } catch (Exception e) {
+                    System.err.println("Sender for client "
+                        + clientData.uniqueId
+                        + " failed while sleeping "
+                        + e.getMessage()
+                    );
+                }
             }
         };
         return routine;
