@@ -2,6 +2,14 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
+
 public class Common {
     static String phrase() {
         return "The Transmission Control Protocol (TCP) is one of the main protocols of the Internet"
@@ -31,5 +39,28 @@ public class Common {
                 + e.getMessage()
             );
         }
+    }
+
+    public static Tracer setupOpenTelemetry(String serviceName) {
+        Resource resource = Resource.getDefault()
+            .toBuilder()
+            .put("service.name", serviceName)
+            .build();
+
+        // Choose transport: gRPC
+        OtlpGrpcSpanExporter otlpExporter = OtlpGrpcSpanExporter.builder()
+            .setEndpoint("http://localhost:4317")  // default OTLP/gRPC port
+            .build();
+
+        SdkTracerProvider tracerProvider = SdkTracerProvider.builder()
+            .setResource(resource)
+            .addSpanProcessor(BatchSpanProcessor.builder(otlpExporter).build())
+            .build();
+
+        OpenTelemetry openTelemetry = OpenTelemetrySdk.builder()
+            .setTracerProvider(tracerProvider)
+            .build();
+
+        return openTelemetry.getTracer("example-service");
     }
 }

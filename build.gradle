@@ -11,6 +11,7 @@ dependencies {
     implementation 'io.opentelemetry:opentelemetry-api:1.32.0'
     implementation 'io.opentelemetry:opentelemetry-sdk:1.32.0'
     implementation 'io.opentelemetry:opentelemetry-exporter-jaeger:1.32.0'
+    implementation 'io.opentelemetry:opentelemetry-exporter-otlp:1.44.1'
 }
 
 java {

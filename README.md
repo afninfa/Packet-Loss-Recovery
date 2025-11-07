@@ -15,6 +15,8 @@ the main p rotocols o f the Inte rnet proto col suite.
     05         06         07         08         09
 ```
 
+## Architecture
+
 Each client gets a dedicated sender thread which sends the chunks, not necessarily in order. The sender threads will then sleep for 1 second before repeating.
 
 <img src="architecture_send.svg" alt="architecture_send" width="500">
