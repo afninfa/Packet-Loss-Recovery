@@ -2,7 +2,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,8 +10,22 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
+import javax.inject.Inject;
+
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Tracer;
+
 
 public class Server {
+
+    private final Tracer tracer;
+    private final OpenTelemetry openTelemetry;
+
+    @Inject  // Tell Dagger how to construct Server
+    public Server(Tracer tracer, OpenTelemetry openTelemetry) {
+        this.tracer = tracer;
+        this.openTelemetry = openTelemetry;
+    }
 
     private record ClientData(
         Set<Integer> ackedSeqNumbers,
@@ -30,7 +43,7 @@ public class Server {
         }
     }
 
-    private static Runnable makeSenderRoutine(
+    private Runnable makeSenderRoutine(
         ClientData clientData,
         List<String> messagePieces
     ) throws SocketException {
@@ -80,7 +93,7 @@ public class Server {
                 // During this time, if the receiver thread gets ACKs, it will mark them
                 // in clientData.ackedSeqNumbers
                 try {
-                    Thread.sleep(Duration.ofSeconds(1));
+                    Thread.sleep(100);
                 } catch (Exception e) {
                     System.err.println("Sender for client "
                         + clientData.uniqueId
@@ -93,7 +106,7 @@ public class Server {
         return routine;
     }
 
-    private static Runnable makeReceiverRoutine(List<String> messagePieces) throws SocketException {
+    private Runnable makeReceiverRoutine(List<String> messagePieces) throws SocketException {
         // Init this socket outside the routine because it can throw exceptions
         DatagramSocket socket = new DatagramSocket(Registry.SERVER_PORT);
         Runnable routine = () -> {
@@ -159,7 +172,7 @@ public class Server {
         return routine;
     }
 
-    public static void run() {
+    public void run() {
         List<String> messagePieces = new ArrayList<>();
         for (int i = 0; i < Common.phrase().length(); i += Registry.TCP_PAYLOAD_SIZE) {
             int end = Math.min(i + Registry.TCP_PAYLOAD_SIZE, Common.phrase().length());
@@ -167,7 +180,7 @@ public class Server {
         }
         Runnable receiverRoutine;
         try {
-            receiverRoutine = Server.makeReceiverRoutine(messagePieces);
+            receiverRoutine = this.makeReceiverRoutine(messagePieces);
         } catch (Exception e) {
             System.err.println("Failed to setup socket receiver " + e.getMessage());
             return;

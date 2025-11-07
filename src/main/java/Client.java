@@ -5,9 +5,23 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import javax.inject.Inject;
+
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Tracer;
+
 public class Client {
 
-    public static Runnable makeReceiverRoutine(
+    private final Tracer tracer;
+    private final OpenTelemetry openTelemetry;
+
+    @Inject
+    public Client(Tracer tracer, OpenTelemetry openTelemetry) {
+        this.tracer = tracer;
+        this.openTelemetry = openTelemetry;
+    }
+
+    public Runnable makeReceiverRoutine(
         DatagramSocket socket,
         Map<Integer, String> messagePieces,
         InetAddress server
@@ -71,7 +85,7 @@ public class Client {
         return routine;
     }
 
-    public static void run() {
+    public void run() {
         DatagramSocket socket;
         Map<Integer, String> messagePieces = new HashMap<>();
         // Get server address
@@ -93,7 +107,7 @@ public class Client {
         }
         // Set up receiver first
         Thread receiver = Thread.startVirtualThread(
-            Client.makeReceiverRoutine(socket, messagePieces, server)
+            this.makeReceiverRoutine(socket, messagePieces, server)
         );
         // Send an INIT packet to the server
         Packet initPacket = new Packet(PacketType.INIT, -1, Registry.PAYLOAD_EMPTY);

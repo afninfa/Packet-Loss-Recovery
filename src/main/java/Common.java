@@ -40,29 +40,4 @@ public class Common {
             );
         }
     }
-
-    // public static Tracer setupOpenTelemetry(String serviceName) {
-    //     Resource resource = Resource.getDefault()
-    //         .toBuilder()
-    //         .put("service.name", serviceName)
-    //         .build();
-
-    //     // Choose transport: gRPC
-    //     OtlpGrpcSpanExporter otlpExporter = OtlpGrpcSpanExporter.builder()
-    //         .setEndpoint("http://localhost:4317")  // default OTLP/gRPC port
-    //         .build();
-
-    //     SdkTracerProvider tracerProvider = SdkTracerProvider.builder()
-    //         .setResource(resource)
-    //         .addSpanProcessor(BatchSpanProcessor.builder(otlpExporter).build())
-    //         .build();
-
-    //     OpenTelemetry openTelemetry = OpenTelemetrySdk.builder()
-    //         .setTracerProvider(tracerProvider)
-    //         .build();
-
-    //     Tracer tracer = openTelemetry.getTracer("example-service");
-        
-    //     return tracer;
-    // }
 }
