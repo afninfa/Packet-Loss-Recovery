@@ -1,7 +1,7 @@
 
 # Packet Loss Recovery Algorithm
 
-Brushing up on my knowledge of TCP by implementing sequence numbers and ACK responses over UDP.
+Brushing up on my knowledge of TCP by implementing sequence numbers and ACK responses over UDP. Also learned about dependency injection with Dagger and distributed traces with OpenTelemetry along the way.
 
 Begin by splitting data into chunks. Each chunk gets an index called a sequence number.
 
@@ -14,8 +14,6 @@ the main p rotocols o f the Inte rnet proto col suite.
 |--------| |--------| |--------| |--------| |--------|
     05         06         07         08         09
 ```
-
-## Architecture
 
 Each client gets a dedicated sender thread which sends the chunks, not necessarily in order. The sender threads will then sleep for 1 second before repeating.
 
