@@ -159,7 +159,7 @@ public class Server {
         return routine;
     }
 
-    public static void main(String[] args) {
+    public static void run() {
         List<String> messagePieces = new ArrayList<>();
         for (int i = 0; i < Common.phrase().length(); i += Registry.TCP_PAYLOAD_SIZE) {
             int end = Math.min(i + Registry.TCP_PAYLOAD_SIZE, Common.phrase().length());

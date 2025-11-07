@@ -4,4 +4,5 @@ public class Registry {
     public static final int TCP_PAYLOAD_SIZE = 100;
     public static final String LOCALHOST = "localhost";
     public static final String PAYLOAD_EMPTY = "-"; // Genuinely empty strings break serialisation
+    public static final String JAEGER_ENDPOINT = "http://localhost:4317";
 }

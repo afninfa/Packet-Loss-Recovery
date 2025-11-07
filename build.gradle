@@ -12,6 +12,9 @@ dependencies {
     implementation 'io.opentelemetry:opentelemetry-sdk:1.32.0'
     implementation 'io.opentelemetry:opentelemetry-exporter-jaeger:1.32.0'
     implementation 'io.opentelemetry:opentelemetry-exporter-otlp:1.44.1'
+
+    implementation 'com.google.dagger:dagger:2.47'
+    annotationProcessor 'com.google.dagger:dagger-compiler:2.47'
 }
 
 java {
@@ -20,17 +23,5 @@ java {
 }
 
 application {
-    mainClass = 'Server'
-}
-
-task runClient(type: JavaExec) {
-    classpath = sourceSets.main.runtimeClasspath
-    mainClass = 'Client'
-    description = 'Runs the client (Ctrl+C to stop)'
-}
-
-task runServer(type: JavaExec) {
-    classpath = sourceSets.main.runtimeClasspath
-    mainClass = 'Server'
-    description = 'Runs the server (Ctrl+C to stop)'
+    mainClass = 'Main'
 }

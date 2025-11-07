@@ -71,7 +71,7 @@ public class Client {
         return routine;
     }
 
-    public static void main(String[] args) {
+    public static void run() {
         DatagramSocket socket;
         Map<Integer, String> messagePieces = new HashMap<>();
         // Get server address
