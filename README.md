@@ -15,18 +15,15 @@ the main p rotocols o f the Inte rnet proto col suite.
     05         06         07         08         09
 ```
 
-Each client gets a dedicated sender thread which sends the chunks, not necessarily in order.
+Each client gets a dedicated sender thread which sends the chunks, not necessarily in order. The sender threads will then sleep for 1 second before repeating.
 
 <img src="architecture_send.svg" alt="architecture_send" width="500">
-
 
 The clients all send their ACK packets to the single receiver thread, which identifies the clients and keeps track of which chunks they have ACKed in a thread-safe data structure per client.
 
 <img src="architecture_recv.svg" alt="architecture_recv" width="500">
 
-The server has **one receiver thread** which receives ACKs from the clients. It writes the sequence numbers to thread-safe sets. There are dedicated **per-client sender threads** which send the data not yet ACKed, and sleep before re-attempting.
-
-Note that because we use virtual threads, sleeping threads won't schedule busy waiting instructions like OS threads would.
+Note that because we use **virtual threads,** sleeping threads won't schedule busy waiting instructions like OS threads would.
 
 This is an example of server logs with two sender threads and one receiver thread.
 
