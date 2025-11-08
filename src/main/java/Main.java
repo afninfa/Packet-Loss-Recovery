@@ -15,12 +15,10 @@ public class Main {
 
         switch (args[0]) {
             case "server" -> {
-                Server server = component.getServer();
-                server.run();
+                component.getServer().run();
             }
             case "client" -> {
-                Client client = component.getClient();
-                client.run();
+                component.getClient().run();
             }
             default -> {
                 Main.usage();

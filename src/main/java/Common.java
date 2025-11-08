@@ -1,14 +1,15 @@
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.HashMap;
+import java.util.Map;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.sdk.trace.SdkTracerProvider;
-import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapSetter;
+
+
+import org.json.JSONObject;
 
 public class Common {
     static String phrase() {
@@ -39,5 +40,24 @@ public class Common {
                 + e.getMessage()
             );
         }
+    }
+
+    public static String packTelemetryInfo(OpenTelemetry openTelemetry) {
+        Map<String, String> carrier = new HashMap<>();
+        TextMapSetter<Map<String, String>> setter = (map, key, value) -> {
+            map.put(key, value);
+        };
+        
+        openTelemetry.getPropagators()
+            .getTextMapPropagator()
+            .inject(Context.current(), carrier, setter);
+        
+        var packed = new JSONObject(carrier).toString();
+
+        return packed;
+    }
+
+    public static void unpackTelemetryInfo(String packed) {
+        // TODO
     }
 }

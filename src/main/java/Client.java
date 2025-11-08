@@ -57,7 +57,7 @@ public class Client {
                     }
                     case DATA -> {
                         // Simulate packet loss
-                        if (rand.nextInt(10) < 5) {
+                        if (rand.nextInt(20) < 5) {
                             // Add to hashmap
                             messagePieces.put(tcpPacket.sequenceNumber(), tcpPacket.messageChunk());
                             // Send ACK

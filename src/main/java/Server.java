@@ -49,9 +49,13 @@ public class Server {
     ) throws SocketException {
         DatagramSocket socket = new DatagramSocket(); // Not a receiver, random port
         Runnable routine = () -> {
+            var clientSessionSpan = this.tracer.spanBuilder(clientData.uniqueId + " thread").startSpan();
+            var clientSessionScope = clientSessionSpan.makeCurrent();
             System.out.println("|RECEIVER| Sender spawned for " + clientData.uniqueId());
             while (true) {
                 // Look through every sequence number
+                var sendAttemptSpan = this.tracer.spanBuilder(clientData.uniqueId + " send attempt").startSpan();
+                var sendAttemptScope = sendAttemptSpan.makeCurrent();
                 List<Integer> seqNumbersSent = IntStream.range(0, messagePieces.size())
                     .boxed()
                     .filter(currSeqNumber -> {
@@ -84,6 +88,8 @@ public class Server {
                         socket
                     );
                     System.out.println("|SENDER " + clientData.uniqueId + "| Sent FIN packet");
+                    clientSessionScope.close();
+                    clientSessionSpan.end();
                     return;
                 } else {
                     System.out.println("|SENDER " + clientData.uniqueId + "| Sent sequence numbers " + seqNumbersSent);
@@ -101,6 +107,9 @@ public class Server {
                         + e.getMessage()
                     );
                 }
+                // Completed one send attempt
+                sendAttemptScope.close();
+                sendAttemptSpan.end();
             }
         };
         return routine;
