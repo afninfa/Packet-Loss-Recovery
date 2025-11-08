@@ -17,15 +17,15 @@ the main p rotocols o f the Inte rnet proto col suite.
 
 Each client gets a dedicated sender thread which sends the chunks, not necessarily in order. The sender threads will then sleep for 1 second before repeating.
 
-<img src="architecture_send.svg" alt="architecture_send" width="500">
+<img src="architecture_send.svg" alt="architecture_send" width="400">
 
 The clients all send their ACK packets to the single receiver thread, which identifies the clients and keeps track of which chunks they have ACKed in a thread-safe data structure per client.
 
-<img src="architecture_recv.svg" alt="architecture_recv" width="500">
+<img src="architecture_recv.svg" alt="architecture_recv" width="400">
 
 Note that because we use **virtual threads,** sleeping threads won't schedule busy waiting instructions like OS threads would.
 
-The program also uses OpenTelemetry to track traces, which are the starting and ending timestamps of various "spans" of code. This flame graph shows the trace of one client (identified by their port 55935). The yellow spans are code running on the server (the client lifetime and each send attempt), and the pink spans are code running on the client (ACK packet sends).
+I've also used OpenTelemetry to measure distributed traces. This flame graph shows a trace of the lifespan of one client. The yellow spans are from the server and the pink spans are from the client.
 
 <img src="flame_graph.jpg" alt="flame graph">
 
