@@ -9,6 +9,8 @@ public class Main {
             return;
         }
 
+        // Instantiating the component will recursively instantiate all the
+        // dependencies (open telemetry objects, server and client)
         TelemetryComponent component = DaggerTelemetryComponent.builder()
             .telemetryModule(new TelemetryModule(args[0]))
             .build();
