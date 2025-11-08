@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
@@ -49,12 +50,16 @@ public class Server {
     ) throws SocketException {
         DatagramSocket socket = new DatagramSocket(); // Not a receiver, random port
         Runnable routine = () -> {
+            Integer currentSendAttempt = 0;
             var clientSessionSpan = this.tracer.spanBuilder(clientData.uniqueId + " thread").startSpan();
             var clientSessionScope = clientSessionSpan.makeCurrent();
             System.out.println("|RECEIVER| Sender spawned for " + clientData.uniqueId());
             while (true) {
+                currentSendAttempt += 1;
                 // Look through every sequence number
-                var sendAttemptSpan = this.tracer.spanBuilder(clientData.uniqueId + " send attempt").startSpan();
+                var sendAttemptSpan = this.tracer
+                    .spanBuilder(clientData.uniqueId+ " send attempt " + currentSendAttempt)
+                    .startSpan();
                 var sendAttemptScope = sendAttemptSpan.makeCurrent();
                 List<Integer> seqNumbersSent = IntStream.range(0, messagePieces.size())
                     .boxed()
@@ -67,7 +72,9 @@ public class Server {
                         Packet dataPacket = new Packet(
                             PacketType.DATA,
                             currSeqNumber,
-                            messagePieces.get(currSeqNumber)
+                            messagePieces.get(currSeqNumber),
+                            // Client will make a distributed span on this trace for its ACK delivery
+                            Optional.of(Common.packTelemetryInfo(this.openTelemetry))
                         );
                         Common.sendPacket(
                             dataPacket,
@@ -95,11 +102,11 @@ public class Server {
                     System.out.println("|SENDER " + clientData.uniqueId + "| Sent sequence numbers " + seqNumbersSent);
                 }
 
-                // Pause for 5 seconds (non-blocking because it's a virtual thread)
+                // Sleep (non-blocking because it's a virtual thread)
                 // During this time, if the receiver thread gets ACKs, it will mark them
                 // in clientData.ackedSeqNumbers
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(15);
                 } catch (Exception e) {
                     System.err.println("Sender for client "
                         + clientData.uniqueId

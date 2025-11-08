@@ -6,6 +6,7 @@ import java.util.Map;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 
 
@@ -23,7 +24,12 @@ public class Common {
             + " the TCP/IP suite. SSL/TLS often run on top of TCP.";
     }
 
-    static void sendPacket(Packet logicalPacket, InetAddress server, int port, DatagramSocket socket) {
+    static void sendPacket(
+        Packet logicalPacket,
+        InetAddress server,
+        int port,
+        DatagramSocket socket
+    ) {
         byte[] logicalPacketSerial = logicalPacket.toString().getBytes();
         DatagramPacket physicalPacket = new DatagramPacket(
             logicalPacketSerial,
@@ -52,12 +58,28 @@ public class Common {
             .getTextMapPropagator()
             .inject(Context.current(), carrier, setter);
         
-        var packed = new JSONObject(carrier).toString();
+        String packed = new JSONObject(carrier).toString();
 
         return packed;
     }
 
-    public static void unpackTelemetryInfo(String packed) {
-        // TODO
+    public static Context unpackTelemetryInfo(OpenTelemetry openTelemetry, String packed) {
+        var getter = new TextMapGetter<java.util.Map<String, Object>>() {
+            public Iterable<String> keys(Map<String, Object> carrier) { 
+                return carrier.keySet(); 
+            }
+            public String get(Map<String, Object> carrier, String key) { 
+                Object value = carrier.get(key);
+                return value != null ? value.toString() : null;
+            }
+        };
+
+        var receivedCarrier = new org.json.JSONObject(packed).toMap();
+
+        var parentContext = openTelemetry.getPropagators()
+            .getTextMapPropagator()
+            .extract(Context.root(), receivedCarrier, getter);
+
+        return parentContext;
     }
 }

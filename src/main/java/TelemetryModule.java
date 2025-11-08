@@ -3,7 +3,11 @@ import dagger.Provides;
 import javax.inject.Singleton;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
+import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
@@ -36,9 +40,23 @@ public class TelemetryModule {
             .addSpanProcessor(BatchSpanProcessor.builder(exporter).build())
             .build();
 
-        return OpenTelemetrySdk.builder()
+        OpenTelemetrySdk sdk = OpenTelemetrySdk.builder()
             .setTracerProvider(tracerProvider)
+            .setPropagators(ContextPropagators.create(
+                TextMapPropagator.composite(
+                    W3CTraceContextPropagator.getInstance(),
+                    W3CBaggagePropagator.getInstance()
+                )
+            ))
             .build();
+
+        // Register shutdown hook to flush spans on JVM exit
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Shutting down OpenTelemetry...");
+            tracerProvider.close();
+        }));
+        
+        return sdk;
     }
 
     @Provides

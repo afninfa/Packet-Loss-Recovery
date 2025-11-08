@@ -25,35 +25,13 @@ The clients all send their ACK packets to the single receiver thread, which iden
 
 Note that because we use **virtual threads,** sleeping threads won't schedule busy waiting instructions like OS threads would.
 
-This is an example of server logs with two sender threads and one receiver thread.
+The program also uses OpenTelemetry to track traces, which are the starting and ending timestamps of various "spans" of code. This flame graph shows the trace of one client (identified by their port 55935). The yellow spans are code running on the server (the client lifetime and each send attempt), and the pink spans are code running on the client (ACK packet sends).
 
-```
-Packet-Loss-Recovery $ make run-server
-javac -d build Server.java
-java -cp build Server
-|RECEIVER| Sender spawned for /127.0.0.1:43701
-|SENDER /127.0.0.1:43701| Sent sequence numbers [0, 1, 2, 3, 4, 5, 6]
-|RECEIVER| Client /127.0.0.1:43701 ACKs 0
-|RECEIVER| Client /127.0.0.1:43701 ACKs 1
-|RECEIVER| Client /127.0.0.1:43701 ACKs 4
-|RECEIVER| Client /127.0.0.1:43701 ACKs 6
-|RECEIVER| Sender spawned for /127.0.0.1:37965
-|SENDER /127.0.0.1:37965| Sent sequence numbers [0, 1, 2, 3, 4, 5, 6]
-|RECEIVER| Client /127.0.0.1:37965 ACKs 2
-|RECEIVER| Client /127.0.0.1:37965 ACKs 3
-|RECEIVER| Client /127.0.0.1:37965 ACKs 5
-|SENDER /127.0.0.1:43701| Sent sequence numbers [2, 3, 5]
-|RECEIVER| Client /127.0.0.1:43701 ACKs 2
-|RECEIVER| Client /127.0.0.1:43701 ACKs 3
-|RECEIVER| Client /127.0.0.1:43701 ACKs 5
-|SENDER /127.0.0.1:37965| Sent sequence numbers [0, 1, 4, 6]
-|RECEIVER| Client /127.0.0.1:37965 ACKs 0
-|RECEIVER| Client /127.0.0.1:37965 ACKs 1
-|RECEIVER| Client /127.0.0.1:37965 ACKs 6
-|SENDER /127.0.0.1:43701| Sent FIN packet
-|SENDER /127.0.0.1:37965| Sent sequence numbers [4]
-|SENDER /127.0.0.1:37965| Sent sequence numbers [4]
-|SENDER /127.0.0.1:37965| Sent sequence numbers [4]
-|RECEIVER| Client /127.0.0.1:37965 ACKs 4
-|SENDER /127.0.0.1:37965| Sent FIN packet
-```
+<img src="flame_graph.jpg" alt="flame graph">
+
+Note that a 1ms sleep was added into the client ACKs so that they would be visible in the graph. This extra sleep has been left in so anybody reading can replicate the results.
+
+### Running the code
+
+You will need Java, Gradle and Docker. First, start the OpenTelemetry backend collector Jaeger using `./start_jaeger.sh`. Next, run the code with `gradle run --args="server"` and `gradle run --args="client"`. You will be able to view the traces at http://localhost:16686.
+

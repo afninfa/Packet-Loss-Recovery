@@ -9,6 +9,7 @@ import javax.inject.Inject;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 
 public class Client {
 
@@ -58,6 +59,17 @@ public class Client {
                     case DATA -> {
                         // Simulate packet loss
                         if (rand.nextInt(20) < 5) {
+                            // Start a span in the distributed trace for handling this packet
+                            String ctxPacked = tcpPacket.telemetryContext().get();
+                            Context ctx = Common.unpackTelemetryInfo(this.openTelemetry, ctxPacked);
+                            var ackSpan = this.tracer
+                                .spanBuilder(server
+                                    + ":"
+                                    + socket.getPort()
+                                    + " ACK for "
+                                    + tcpPacket.sequenceNumber())
+                                .setParent(ctx).startSpan();
+                            var ackScope = ackSpan.makeCurrent();
                             // Add to hashmap
                             messagePieces.put(tcpPacket.sequenceNumber(), tcpPacket.messageChunk());
                             // Send ACK
@@ -72,6 +84,14 @@ public class Client {
                             } catch (Exception e) {
                                 System.err.println("Could not send ACK packet " + e);
                             }
+                            try {
+                                Thread.sleep(1);
+                            } catch (Exception e) {
+                                System.err.println(e.getMessage());
+                                return;
+                            }
+                            ackScope.close();
+                            ackSpan.end();
                         }
                     }
                     case ACK, INIT -> {
